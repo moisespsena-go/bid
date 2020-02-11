@@ -1,14 +1,14 @@
-package keyb
+package bid
 
 import "database/sql/driver"
 
 type AI struct {
-	Key
+	BID
 }
 
 func (this *AI) Value() (driver.Value, error) {
-	if this.Key == "" {
-		this.Key = New()
+	if this.IsZero() {
+		this.BID = New()
 	}
-	return this.Key.Value()
+	return this.BID.Value()
 }

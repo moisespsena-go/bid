@@ -1,4 +1,4 @@
-package keyb
+package bid
 
 import (
 	"reflect"

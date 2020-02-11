@@ -1,4 +1,4 @@
-package keyb
+package bid
 
 import (
 	"reflect"
@@ -9,7 +9,7 @@ import (
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name string
-		want Key
+		want BID
 	}{
 		// TODO: Add test cases.
 	}
@@ -29,14 +29,14 @@ func TestKeyHex(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Key
+		want BID
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := KeyHex(tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("KeyHex() = %v, want %v", got, tt.want)
+			if got := Hex(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Hex() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -55,8 +55,8 @@ func TestIsKeyHex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsKeyHex(tt.args.s); got != tt.want {
-				t.Errorf("IsKeyHex() = %v, want %v", got, tt.want)
+			if got := IsHex(tt.args.s); got != tt.want {
+				t.Errorf("IsHex() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -69,7 +69,7 @@ func TestNewKeyWithTime(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Key
+		want BID
 	}{
 		// TODO: Add test cases.
 	}

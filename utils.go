@@ -1,4 +1,4 @@
-package keyb
+package bid
 
 import (
 	"crypto/md5"
@@ -19,6 +19,16 @@ func readMachineId() []byte {
 		sum[2] = byte(n >> 16)
 		return id
 	}
+	hw := md5.New()
+	hw.Write([]byte(hostname))
+	copy(id, hw.Sum(nil))
+	return id
+}
+// readMachineId generates and returns a machine id.
+// If this function fails to get the hostname it will cause a runtime error.
+func MachineId(hostname string) []byte {
+	var sum [3]byte
+	id := sum[:]
 	hw := md5.New()
 	hw.Write([]byte(hostname))
 	copy(id, hw.Sum(nil))
