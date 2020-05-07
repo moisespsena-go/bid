@@ -21,20 +21,16 @@ var (
 	zero   = make([]byte, 12)
 )
 
-func Zero() BID {
-	return []byte{}
-}
-
 // BID is a unique BID identifying. It must be exactly 12 bytes
 // long.
 type BID []byte
 
-func (this *BID) Reset() {
-	copy((*this)[:], zero)
+func (this BID) Reset() {
+	this = nil
 }
 
-func (this *BID) Eq(other BID) bool {
-	return bytes.Compare((*this)[:], other[:]) == 0
+func (this BID) Eq(other BID) bool {
+	return bytes.Compare(this, other) == 0
 }
 
 func (this *BID) Generate() {
@@ -108,25 +104,26 @@ func (this BID) MarshalJSON() ([]byte, error) {
 var nullBytes = []byte("null")
 
 // UnmarshalJSON turns *bson.BID into a json.Unmarshaller.
-func (this BID) UnmarshalJSON(data []byte) error {
+func (this *BID) UnmarshalJSON(data []byte) error {
 	if len(data) == 2 && data[0] == '"' && data[1] == '"' || bytes.Equal(data, nullBytes) {
-		copy(this[:], zero)
+		*this = nil
 		return nil
 	}
-	if data[0] != '"' || data[25] != '"' {
+	if data[0] != '"' || data[len(data)-1] != '"' {
 		return errors.New(fmt.Sprintf("invalid BID in JSON: %s", string(data)))
 	}
-	return this.ParseBytes(data[1 : len(data)-1])
+	return this.ParseString(string(data[1 : len(data)-1]))
 }
 
 // MarshalText turns bson.BID into an encoding.TextMarshaler.
 func (this BID) MarshalText() ([]byte, error) {
-	return this[:], nil
+	return this, nil
 }
 
 // UnmarshalText turns *BID into an encoding.TextUnmarshaler.
-func (this BID) UnmarshalText(data []byte) error {
-	return this.ParseBytes(data)
+func (this *BID) UnmarshalText(data []byte) error {
+	*this = data
+	return nil
 }
 
 // ParseString turns *BID from string.
@@ -134,7 +131,7 @@ func (this *BID) ParseString(s string) error {
 	if b, err := b64enc.DecodeString(s); err != nil {
 		return errors.Wrapf(err, "invalid BID %q in base64", s)
 	} else if len(b) != 12 {
-		return errors.Wrapf(err, "BID %q in base64 is not 12 bytes", s)
+		return fmt.Errorf("BID %q in base64 is not 12 bytes", s)
 	} else {
 		*this = b
 		return nil
@@ -178,18 +175,12 @@ func (this BID) Valid() bool {
 	return len(this) == 12
 }
 
-// byteSlice returns byte slice of id from start to end.
-// Calling this function with an invalid id will cause a runtime panic.
-func (this BID) byteSlice(start, end int) []byte {
-	return this[:][start:end]
-}
-
 // Time returns the timestamp part of the id.
 // It's a runtime error to call this method with an invalid id.
 func (this BID) Time() time.Time {
 	// First 4 bytes of BID is 32-bit big-endian seconds from epoch.
 	secs := int64(binary.BigEndian.Uint32(this[:][0:4]))
-	return time.Unix(secs, 0).In(time.UTC)
+	return time.Unix(secs, 0).UTC()
 }
 
 // Machine returns the 3-byte machine id part of the id.
@@ -206,8 +197,8 @@ func (this BID) Pid() uint16 {
 
 // Counter returns the incrementing value part of the id.
 // It's a runtime error to call this method with an invalid id.
-func (this BID) Counter() int32 {
+func (this BID) Counter() uint32 {
 	b := this[:][9:12]
 	// Counter is stored as big-endian 3-byte value
-	return int32(uint32(b[0])<<16 | uint32(b[1])<<8 | uint32(b[2]))
+	return uint32(b[0])<<16 | uint32(b[1])<<8 | uint32(b[2])
 }

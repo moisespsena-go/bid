@@ -2,139 +2,78 @@ package bid
 
 import (
 	"bytes"
-	"reflect"
+	"os"
 	"testing"
 	"time"
 )
 
 func TestKey_String(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want string
-	}{
-		{"t1", MustParse("5cd9a8767c1dc9687b139fd7"), "5cd9a8767c1dc9687b139fd7"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.String(); got != tt.want {
-				t.Errorf("BID.String() = %v, want %v", got, tt.want)
-			}
-		})
+	want := `XrRPlHwdyRQ2ZzYP`
+	s := BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}.String()
+	if s != want {
+		t.Errorf("BID.String() = %v, want %v", s, want)
 	}
 }
 
 func TestKey_Hex(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want string
-	}{
-		{"t1", MustParse("5cd9a8767c1dc9687b139fd7"), "5cd9a8767c1dc9687b139fd7"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.Hex(); got != tt.want {
-				t.Errorf("BID.Hex() = %v, want %v", got, tt.want)
-			}
-		})
+	want := `5eb44f947c1dc9143667360f`
+	s := BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}.Hex()
+	if s != want {
+		t.Errorf("BID.MarshalJSON() = %v, want %v", s, want)
 	}
 }
 
 func TestKey_MarshalJSON(t *testing.T) {
-	tests := []struct {
-		name    string
-		this    BID
-		want    []byte
-		wantErr bool
-	}{
-		{"t1", MustParse("5cd9a8767c1dc9687b139fd7"), []byte(`"5cd9a8767c1dc9687b139fd7"`), false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.this.MarshalJSON()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BID.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BID.MarshalJSON() = %v, want %v", got, tt.want)
-			}
-		})
+	want := `"XrRPlHwdyRQ2ZzYP"`
+	b, _ := BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}.MarshalJSON()
+	if string(b) != want {
+		t.Errorf("BID.MarshalJSON() = %v, want %v", b, want)
 	}
 }
 
 func TestKey_UnmarshalJSON(t *testing.T) {
-	type args struct {
-		data []byte
-	}
 	tests := []struct {
 		name    string
-		this    *BID
-		args    args
+		arg     string
+		want    BID
 		wantErr bool
 	}{
-		{"t1", new(BID), args{[]byte(`"5cd9a8767c1dc9687b139fd7"`)}, false},
+		{"ok", `"XrRPlHwdyRQ2ZzYP"`, BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}, false},
+		{"failed", `"XrRPlHwdyRQ2ZzYP`, nil, true},
+		{"bad value", `"XrRPlRQ2ZzYP"`, nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.this.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
-				t.Errorf("BID.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got, _ := tt.this.MarshalJSON(); bytes.Compare(got, tt.args.data) != 0 {
-				t.Errorf("BID.MarshalJSON() = %v, want %v", got, tt.args.data)
-				return
+			var this BID
+			err := this.UnmarshalJSON([]byte(tt.arg))
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("BID.UnmarshalJSON() = %v, unexpected error", err)
+			} else if tt.wantErr {
+				t.Errorf("BID.UnmarshalJSON() = nil, expected error")
+			} else if bytes.Compare(this, tt.want) != 0 {
+				t.Errorf("BID.UnmarshalJSON() = %v, want %v", this, tt.want)
 			}
 		})
 	}
 }
 
 func TestKey_MarshalText(t *testing.T) {
-	tests := []struct {
-		name    string
-		this    BID
-		want    []byte
-		wantErr bool
-	}{
-		{"t1", MustParse("5cd9a8767c1dc9687b139fd7"), []byte("5cd9a8767c1dc9687b139fd7"), false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.this.MarshalText()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BID.MarshalText() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BID.MarshalText() = %v, want %v", got, tt.want)
-			}
-		})
+	bid := BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}
+	b, _ := bid.MarshalText()
+	if bytes.Compare(b, bid) != 0 {
+		t.Errorf("BID.MarshalText() = %v, want %v", b, bid)
 	}
 }
 
 func TestKey_UnmarshalText(t *testing.T) {
-	type args struct {
-		data []byte
-	}
-	tests := []struct {
-		name    string
-		this    *BID
-		args    args
-		wantErr bool
-	}{
-		{"t1", new(BID), args{[]byte("5cd9a8767c1dc9687b139fd7")}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.this.ParseBytes(tt.args.data); (err != nil) != tt.wantErr {
-				t.Errorf("BID.UnmarshalText() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if got := []byte(tt.this.Hex()); bytes.Compare(got, tt.args.data) != 0 {
-				t.Errorf("BID.UnmarshalText() = %v, want %v", got, tt.args.data)
-				return
-			}
-		})
+	b := []byte{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}
+	bid := make(BID, 12)
+	bid.UnmarshalText(b)
+	if bytes.Compare(b, bid) != 0 {
+		t.Errorf("BID.UnmarshalText() = %v, want %v", bid, b)
 	}
 }
 
@@ -144,7 +83,10 @@ func TestKey_Valid(t *testing.T) {
 		this BID
 		want bool
 	}{
-		// TODO: Add test cases.
+		{"valid", BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15}, true},
+		{"invalid", BID{}, false},
+		{"invalid", BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54}, false},
+		{"invalid", BID{94, 180, 79, 148, 124, 29, 201, 20, 54, 103, 54, 15, 17}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -155,92 +97,37 @@ func TestKey_Valid(t *testing.T) {
 	}
 }
 
-func TestKey_byteSlice(t *testing.T) {
-	type args struct {
-		start int
-		end   int
-	}
-	tests := []struct {
-		name string
-		this BID
-		args args
-		want []byte
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.byteSlice(tt.args.start, tt.args.end); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BID.byteSlice() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestKey_Time(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want time.Time
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.Time(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BID.Time() = %v, want %v", got, tt.want)
-			}
-		})
+	now := time.Unix(time.Now().Unix(), 0).UTC()
+	if got := NewWithTime(now).Time(); got != now {
+		t.Errorf("BID.Time() = %v, want %v", got, now)
 	}
 }
 
 func TestKey_Machine(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want []byte
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.Machine(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BID.Machine() = %v, want %v", got, tt.want)
-			}
-		})
+	if got := New().Machine(); bytes.Compare(got, machineId[:]) != 0 {
+		t.Errorf("BID.Machine() = %v, want %v", got, machineId)
 	}
 }
 
 func TestKey_Pid(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want uint16
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.Pid(); got != tt.want {
-				t.Errorf("BID.Pid() = %v, want %v", got, tt.want)
-			}
-		})
+	pid := uint16(os.Getpid())
+	if got := New().Pid(); got != pid {
+		t.Errorf("BID.Pid() = %v, want %v", got, pid)
 	}
 }
 
 func TestKey_Counter(t *testing.T) {
-	tests := []struct {
-		name string
-		this BID
-		want int32
-	}{
-		// TODO: Add test cases.
+	counter := uint32(678)
+	if got := NewArgs(time.Now(), 999, [3]byte{'a', 'b', 'c'}, counter).Counter(); got != counter {
+		t.Errorf("BID.Counter() = %v, want %v", got, counter)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.this.Counter(); got != tt.want {
-				t.Errorf("BID.Counter() = %v, want %v", got, tt.want)
-			}
-		})
+}
+
+func TestBID_Generate(t *testing.T) {
+	var bid BID
+	bid.Generate()
+	if len(bid) != 12 {
+		t.Errorf("BID.Generate() = %v (%d), want 12 bytes", bid, len(bid))
 	}
 }

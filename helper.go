@@ -15,7 +15,7 @@ var machineId = readMachineId()
 var processId = os.Getpid()
 
 // keyCounter is atomically incremented when generating a new BID
-// using NewObjectId() function. It's used as a counter part of an id.
+// using New() function. It's used as a counter part of an id.
 var keyCounter = readRandomUint32()
 
 func New() BID {
@@ -88,7 +88,7 @@ func NewWithTimeArgs(Y, M, D, h, m, s int) BID {
 }
 
 // NewArgs create the BID object with args
-func NewArgs(now time.Time, processId int, machineId []byte, counter uint32) (b BID) {
+func NewArgs(now time.Time, processId int, machineId [3]byte, counter uint32) (b BID) {
 	b = make(BID, 12, 12)
 	// Timestamp, 4 bytes, big endian
 	binary.BigEndian.PutUint32(b[:], uint32(now.UTC().Unix()))
