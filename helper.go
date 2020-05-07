@@ -19,7 +19,7 @@ var processId = os.Getpid()
 var keyCounter = readRandomUint32()
 
 func New() BID {
-	return NewArgs(time.Now(), processId, machineId, atomic.AddUint32(&keyCounter, 1))
+	return NewWithTime(time.Now())
 }
 
 // Hex returns an BID from the provided hex representation.
@@ -76,8 +76,20 @@ func NewKeyWithTime(t time.Time) (bid BID) {
 	return
 }
 
+// NewWithTime returns a BID with the timestamp part filled
+// with the provided number of seconds from epoch UTC.
+func NewWithTime(t time.Time) BID {
+	return NewArgs(t, processId, machineId, atomic.AddUint32(&keyCounter, 1))
+}
+
+// NewWithTimeArgs returns a BID with the timestamp args (year, month, day, hour, minute, second).
+func NewWithTimeArgs(Y, M, D, h, m, s int) BID {
+	return NewWithTime(time.Date(Y, time.Month(M), D, h, m, s, 0, time.UTC))
+}
+
 // NewArgs create the BID object with args
 func NewArgs(now time.Time, processId int, machineId []byte, counter uint32) (b BID) {
+	b = make(BID, 12, 12)
 	// Timestamp, 4 bytes, big endian
 	binary.BigEndian.PutUint32(b[:], uint32(now.UTC().Unix()))
 	// Machine, first 3 bytes of md5(hostname)
@@ -91,17 +103,28 @@ func NewArgs(now time.Time, processId int, machineId []byte, counter uint32) (b 
 	b[9] = byte(counter >> 16)
 	b[10] = byte(counter >> 8)
 	b[11] = byte(counter)
-
 	return
 }
 
-func Parse(s string) (bid BID, err error) {
+func Parse(b []byte) (bid BID, err error) {
+	err = bid.ParseBytes(b)
+	return
+}
+
+func MustParse(b []byte) (bid BID) {
+	if err := bid.ParseBytes(b); err != nil {
+		log.Fatal(err)
+	}
+	return
+}
+
+func ParseString(s string) (bid BID, err error) {
 	err = bid.ParseBytes([]byte(s))
 	return
 }
 
-func MustParse(s string) (bid BID) {
-	if err := bid.ParseBytes([]byte(s)); err != nil {
+func MustParseString(s string) (bid BID) {
+	if err := bid.ParseString(s); err != nil {
 		log.Fatal(err)
 	}
 	return
