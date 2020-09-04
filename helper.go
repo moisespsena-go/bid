@@ -72,6 +72,7 @@ func IsB64(s string) bool {
 // by this method, it is useful only for queries to find documents with ids
 // generated before or after the specified timestamp.
 func NewKeyWithTime(t time.Time) (bid BID) {
+	bid = make(BID, 12)
 	binary.BigEndian.PutUint32(bid[:4], uint32(t.Unix()))
 	return
 }
