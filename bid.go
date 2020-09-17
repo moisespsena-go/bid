@@ -128,6 +128,10 @@ func (this *BID) UnmarshalText(data []byte) error {
 
 // ParseString turns *BID from string.
 func (this *BID) ParseString(s string) error {
+	if s == "" {
+		*this = nil
+		return nil
+	}
 	if b, err := b64enc.DecodeString(s); err != nil {
 		return errors.Wrapf(err, "invalid BID %q in base64", s)
 	} else if len(b) != 12 {
