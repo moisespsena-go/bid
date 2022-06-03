@@ -30,7 +30,12 @@ func (this BID) Reset() {
 }
 
 func (this BID) Eq(other BID) bool {
-	return bytes.Compare(this, other) == 0
+	if this == nil && other == nil {
+		return true
+	} else if this != nil && other != nil {
+		return bytes.Compare(this, other) == 0
+	}
+	return false
 }
 
 func (this *BID) Generate() {
@@ -45,6 +50,9 @@ func (this *BID) Scan(src interface{}) error {
 	switch t := src.(type) {
 	case []byte:
 		return this.ParseBytes(t)
+	case BID:
+		*this = t
+		return nil
 	case string:
 		return this.ParseString(t)
 	default:
@@ -147,7 +155,11 @@ func (this *BID) ParseBytes(data []byte) error {
 	if len(data) == 12 {
 		*this = data
 		return nil
+	} else if len(data) == 0 {
+		*this = nil
+		return nil
 	}
+
 	if len(data) == 1 && data[0] == ' ' || len(data) == 0 || bytes.Compare(data, zero) == 0 {
 		*this = []byte{}
 		return nil
