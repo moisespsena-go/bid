@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"sync/atomic"
+	"sync"
 	"time"
 )
 
@@ -16,7 +16,24 @@ var processId = os.Getpid()
 
 // keyCounter is atomically incremented when generating a new BID
 // using New() function. It's used as a counter part of an id.
-var keyCounter = readRandomUint32()
+var (
+	keyConterMu sync.Mutex
+	keyCounter  = readRandomUint32()
+)
+
+func nextKeyCounter() uint32 {
+	keyConterMu.Lock()
+	defer keyConterMu.Unlock()
+
+	v := keyCounter
+
+	if byte(v>>16) == 255 && byte(v>>8) == 255 && byte(v) == 255 {
+		keyCounter = readRandomUint32()
+	} else {
+		keyCounter++
+	}
+	return v
+}
 
 func New() BID {
 	return NewWithTime(time.Now())
@@ -80,7 +97,7 @@ func NewKeyWithTime(t time.Time) (bid BID) {
 // NewWithTime returns a BID with the timestamp part filled
 // with the provided number of seconds from epoch UTC.
 func NewWithTime(t time.Time) BID {
-	return NewArgs(t, processId, machineId, atomic.AddUint32(&keyCounter, 1))
+	return NewArgs(t, processId, machineId, nextKeyCounter())
 }
 
 // NewWithTimeArgs returns a BID with the timestamp args (year, month, day, hour, minute, second).
@@ -100,6 +117,16 @@ func NewArgs(now time.Time, processId int, machineId [3]byte, counter uint32) (b
 	// Pid, 2 bytes, specs don't specify endianness, but we use big endian.
 	b[7] = byte(processId >> 8)
 	b[8] = byte(processId)
+	// Increment, 3 bytes, big endian
+	b[9] = byte(counter >> 16)
+	b[10] = byte(counter >> 8)
+	b[11] = byte(counter)
+	return
+}
+
+// NewArgs create the BID object with args
+func NewOlyCounter(counter uint32) (b BID) {
+	b = make(BID, 12, 12)
 	// Increment, 3 bytes, big endian
 	b[9] = byte(counter >> 16)
 	b[10] = byte(counter >> 8)
